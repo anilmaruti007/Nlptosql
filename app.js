@@ -6,7 +6,7 @@ const apiai = require('apiai');
 
 const sql = require('./SqlQuerries');
 
-const app = apiai('826628b62aac4f9cada88f6819c0429e');
+const app = apiai('5d0e0d60ddbd4c3f96abdd8b0e2f4f04');
 
 const request = require('request-promise');
 
@@ -105,7 +105,7 @@ intents.onDefault((session, args) => {
                 if (ele.entity.toLowerCase() === "this year") {
                     let year = new Date().getFullYear();
                     obj['yearmonth'].push(year);
-                } else if(Number(ele.entity).toString() !== "NaN"){
+                } else if (Number(ele.entity).toString() !== "NaN") {
                     let year = new Date(ele.entity).getFullYear();
                     obj['yearmonth'].push(year);
                 } else if (ele.entity.toLowerCase() === "last year" || ele.entity.toLowerCase() === 'previous year') {
@@ -116,8 +116,13 @@ intents.onDefault((session, args) => {
                     obj['yearmonth'].push(month);
                 } else {
                     require('./regex')(ele.entity).forEach((e) => {
-                        let month, date;
-                        date = new Date(e);
+                        let month, date, dumm;
+                        dumm = e.trim();
+                        if(new Date(e).toDateString() === 'Invalid Date'){
+                            date = new Date(`${dumm} ${new Date().getFullYear()}`);
+                        }else{
+                            date = new Date(e);
+                        }
                         if (date.getMonth() > 9) {
                             month = date.getMonth() + 1;
                         } else {
@@ -170,14 +175,37 @@ intents.onDefault((session, args) => {
         getUtilFun(Query, args.intent, obj, entitys, session);
     } else if (args.intent.toLowerCase() === 'al') {
         getUtilFun(Query, args.intent, obj, entitys, session);
+    } else if (args.intent.toLowerCase() === 'a2b') {
+        getUtilFun(Query, args.intent, obj, entitys, session);
     } else if (args.intent.toLowerCase() === 'none') {
-        session.send("Hi I am None").endDialog();
+        apiCall(session.message.text).then(result => {
+            session.send(result)
+        }).catch(err => {
+            console.log(err);
+        })
     } else {
-        session.send("Intents doesn't mathed!").endDialog();
+        session.send("Intents doesn't matched!").endDialog();
     }
 })
 
-
+async function apiCall(userUtterance) {
+    var a = userUtterance;
+    var result = new Promise(async function(resolve, reject){
+        var request = app.textRequest(a, {
+            sessionId: '1234567891'
+        });
+        request.on('response', function (response) {
+            var a = response;
+            resolve(a["result"]["fulfillment"]["speech"]);
+        });
+        request.on('error', function (error) {
+            reject(error);
+        }); 
+        request.end();
+    });
+    var final = await result;
+    return final;
+}
 
 function getUtilFun(Query, intent, obj, entitys, session) {
     require('./util')(Query, intent, obj, (data) => {

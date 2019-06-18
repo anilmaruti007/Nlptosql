@@ -21,11 +21,24 @@ module.exports = (query, intent, obj, cb) => {
             query = query.replace(`"" in ("", "", "")`, `${data} in ('${obj[data][0]}', '${obj[data][1]}', '${obj[data][2]}')`)
         })
         cb(query)
-    } else if(intent === 'AIB'){
+    } else if (intent === 'AIB') {
         Object.keys(obj).forEach((data) => {
             query = query.replace(`"" between "" and ""`, `${data} between  '${obj[data][0]}' and '${obj[data][1]}'`);
         })
-        cb(query); 
+        cb(query);
+    } else if (intent === 'A2B') {
+        Object.keys(obj).forEach((data) => {
+            if (data === 'yearmonth')
+                query = query.replace(`"" between "" and ""`, `${data} between  '${obj[data][0]}' and '${obj[data][1]}'`);
+            else
+                query = query.replace('"" like ""', data + " like " + `'${obj[data]}'`);
+        })
+        cb(query)
+    } else if (intent === 'A3') {
+        Object.keys(obj).forEach((data) => {
+            query = query.replace('"" like ""', `${data} like '%${obj[data]}%'`);
+        });
+        cb(query);
     }
 }
 
